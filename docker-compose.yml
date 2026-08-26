@@ -3,16 +3,23 @@ services:
     container_name: postgres_container
     image: postgres:14
     environment:
+      POSTGRES_DB: api_implementation
       POSTGRES_USER: venkata
       POSTGRES_PASSWORD: venkata
       PGDATA: /data/postgres
     volumes:
       - postgres:/data/postgres
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/01-create-service-databases.sql:ro
     ports:
       - "5432:5432"
     networks:
       - postgres
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U venkata -d api_implementation"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   pgadmin:
     container_name: pgadmin_container
@@ -25,6 +32,9 @@ services:
       - pgadmin:/var/lib/pgadmin
     ports:
       - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - postgres
     restart: unless-stopped
