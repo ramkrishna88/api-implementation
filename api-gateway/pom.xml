@@ -11,8 +11,8 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>api-implementation</artifactId>
-    <name>api-implementation</name>
+    <artifactId>api-gateway</artifactId>
+    <name>api-gateway</name>
     <description>API entry point for the ecommerce microservices</description>
 
     <dependencies>

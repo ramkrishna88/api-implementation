@@ -4,15 +4,15 @@ The project is split into independently runnable Spring Boot applications:
 
 | Application | Port | Direct base URL |
 |---|---:|---|
-| `api-implementation` gateway | 8080 | http://localhost:8080 |
+| `api-gateway` | 8080 | http://localhost:8080 |
 | `user-service` | 8081 | http://localhost:8081 |
 | `product-service` | 8082 | http://localhost:8082 |
 | `order-service` | 8083 | http://localhost:8083 |
 | `cart-service` | 8084 | http://localhost:8084 |
 
-The root application forwards `/api/users`, `/api/products`, `/api/orders`, and `/api/cart` to the corresponding service. You can also call each service directly on its own port.
+The `api-gateway` module forwards `/api/users`, `/api/products`, `/api/orders`, and `/api/cart` to the corresponding service. You can also call each service directly on its own port.
 
-The root `pom.xml` is a Maven aggregator for all four services. Open the repository root in IntelliJ and accept the Maven import prompt; the services will be available in one Maven and Services view.
+The root `pom.xml` is the Maven parent/aggregator. Each application is a separate Maven module and can be opened or run independently.
 
 ## Run PostgreSQL and pgAdmin with Docker
 
@@ -36,14 +36,14 @@ In pgAdmin, register a server with host `postgres`, port `5432`, username `venka
 ## Run services separately from IntelliJ or Maven
 
 ```bash
-./mvnw -f api-implementation/pom.xml spring-boot:run
-./mvnw -f user-service/pom.xml spring-boot:run
-./mvnw -f product-service/pom.xml spring-boot:run
-./mvnw -f order-service/pom.xml spring-boot:run
-./mvnw -f cart-service/pom.xml spring-boot:run
+./mvnw -pl api-gateway spring-boot:run
+./mvnw -pl user-service spring-boot:run
+./mvnw -pl product-service spring-boot:run
+./mvnw -pl order-service spring-boot:run
+./mvnw -pl cart-service spring-boot:run
 ```
 
-To compile and test all projects from the unified root project:
+To compile and test all modules:
 
 ```bash
 ./mvnw clean test

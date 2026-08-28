@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,6 +17,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 
 import java.net.URI;
+import java.util.Locale;
 
 @RestController
 public class ApiGatewayController {
@@ -66,11 +68,14 @@ public class ApiGatewayController {
             RestClient.RequestHeadersSpec<?> outgoingRequest = body == null
                     ? requestSpec
                     : requestSpec.body(body);
-            return outgoingRequest.retrieve().toEntity(byte[].class);
+            ResponseEntity<byte[]> response = outgoingRequest.retrieve().toEntity(byte[].class);
+            return responseWithForwardableHeaders(
+                    response.getStatusCode(), response.getHeaders(), response.getBody());
         } catch (RestClientResponseException exception) {
-            return ResponseEntity.status(exception.getStatusCode())
-                    .headers(exception.getResponseHeaders())
-                    .body(exception.getResponseBodyAsByteArray());
+            return responseWithForwardableHeaders(
+                    exception.getStatusCode(),
+                    exception.getResponseHeaders(),
+                    exception.getResponseBodyAsByteArray());
         } catch (RestClientException exception) {
             return ResponseEntity.internalServerError().build();
         }
@@ -89,9 +94,30 @@ public class ApiGatewayController {
     private void copyForwardableHeaders(HttpHeaders incomingHeaders, RestClient.RequestHeadersSpec<?> requestSpec) {
         incomingHeaders.forEach((name, values) -> {
             if (!name.equalsIgnoreCase(HttpHeaders.HOST)
-                    && !name.equalsIgnoreCase(HttpHeaders.CONTENT_LENGTH)) {
+                    && !isHopByHopHeader(name)) {
                 requestSpec.header(name, values.toArray(String[]::new));
             }
         });
+    }
+
+    private ResponseEntity<byte[]> responseWithForwardableHeaders(
+            HttpStatusCode status, HttpHeaders sourceHeaders, byte[] body) {
+        HttpHeaders responseHeaders = new HttpHeaders();
+        if (sourceHeaders != null) {
+            sourceHeaders.forEach((name, values) -> {
+                if (!isHopByHopHeader(name)) {
+                    responseHeaders.put(name, values);
+                }
+            });
+        }
+        return ResponseEntity.status(status).headers(responseHeaders).body(body);
+    }
+
+    private boolean isHopByHopHeader(String name) {
+        return switch (name.toLowerCase(Locale.ROOT)) {
+            case "connection", "keep-alive", "proxy-authenticate", "proxy-authorization",
+                    "te", "trailer", "transfer-encoding", "upgrade", "content-length" -> true;
+            default -> false;
+        };
     }
 }
