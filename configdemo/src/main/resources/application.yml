@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: config-demo
+  profiles:
+    active: dev
+
+build:
+    id: ${id}
+    version: ${version}
+    name:
+    type: "Default build"
+
+
+server:
+  port: ${SERVER_PORT:8086}

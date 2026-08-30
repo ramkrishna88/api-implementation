@@ -12,7 +12,7 @@ The project is split into independently runnable Spring Boot applications:
 
 The `api-gateway` module forwards `/api/users`, `/api/products`, `/api/orders`, and `/api/cart` to the corresponding service. You can also call each service directly on its own port.
 
-The root `pom.xml` is the Maven parent/aggregator. Each application is a separate Maven module and can be opened or run independently.
+The root `pom.xml` is a convenience aggregator for the five applications. Each application is also a standalone Spring Boot project with its own `pom.xml`, `mvnw`, `mvnw.cmd`, `.mvn` directory, and project documentation.
 
 ## Run PostgreSQL and pgAdmin with Docker
 
@@ -33,7 +33,18 @@ PostgreSQL is exposed on port `5432`; pgAdmin is available at http://localhost:5
 
 In pgAdmin, register a server with host `postgres`, port `5432`, username `venkata`, and password `venkata`. When connecting from Spring Boot applications running in IntelliJ, use host `localhost` as configured in each service.
 
-## Run services separately from IntelliJ or Maven
+## Run a service standalone
+
+Open a terminal in the service directory and run its own Maven wrapper:
+
+```bash
+cd user-service
+./mvnw spring-boot:run
+```
+
+Use the same pattern for `api-gateway`, `product-service`, `order-service`, or `cart-service`. Run each service in a separate terminal when you want the whole system running.
+
+You can also run them from the repository root through the aggregator:
 
 ```bash
 ./mvnw -pl api-gateway spring-boot:run
@@ -49,4 +60,4 @@ To compile and test all modules:
 ./mvnw clean test
 ```
 
-Each service owns a separate PostgreSQL database. The services communicate locally through the REST URLs defined in their `application.properties` files.
+The user service uses MongoDB, the product service uses MySQL, and the order and cart services use PostgreSQL. The services communicate locally through the REST URLs defined in their `application.properties` files.
