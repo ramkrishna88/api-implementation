@@ -1,5 +1,11 @@
- build:
+build:
   id: 101
   version: 1.2.3
   name: production
   type: production build
+
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
+  file:
+    name: ${CONFIGDEMO_LOG_FILE:logs/configdemo.log}

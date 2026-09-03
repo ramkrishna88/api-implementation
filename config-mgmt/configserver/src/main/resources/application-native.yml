@@ -1,0 +1,9 @@
+spring:
+  config:
+    activate:
+      on-profile: native
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: ${CONFIG_NATIVE_SEARCH_LOCATIONS:optional:file:./config-mgmt,optional:file:./,optional:file:../,optional:classpath:/config}

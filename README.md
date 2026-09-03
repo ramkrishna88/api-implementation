@@ -4,34 +4,36 @@ The project is split into independently runnable Spring Boot applications:
 
 | Application | Port | Direct base URL |
 |---|---:|---|
-| `api-gateway` | 8080 | http://localhost:8080 |
+| `gateway` | 8080 | http://localhost:8080 |
 | `user-service` | 8081 | http://localhost:8081 |
 | `product-service` | 8082 | http://localhost:8082 |
 | `order-service` | 8083 | http://localhost:8083 |
 | `cart-service` | 8084 | http://localhost:8084 |
+| `configserver` | 8888 | http://localhost:8888 |
+| `eureka` | 8761 | http://localhost:8761 |
 
-The `api-gateway` module forwards `/api/users`, `/api/products`, `/api/orders`, and `/api/cart` to the corresponding service. You can also call each service directly on its own port.
+The `gateway` module forwards `/api/users`, `/api/products`, `/api/orders`, and `/api/cart` to the corresponding service. You can also call each service directly on its own port.
 
 The root `pom.xml` is a convenience aggregator for the five applications. Each application is also a standalone Spring Boot project with its own `pom.xml`, `mvnw`, `mvnw.cmd`, `.mvn` directory, and project documentation.
 
-## Run PostgreSQL and pgAdmin with Docker
+## Database and local configuration
 
-This Compose setup starts PostgreSQL and pgAdmin. The Spring Boot applications continue to run independently from IntelliJ or Maven.
+All persistence services use an embedded, file-backed H2 database. No database container is required. By default, the database files are stored under `./data` and are separated by service:
+
+- `./data/userdb`
+- `./data/productdb`
+- `./data/orderdb`
+- `./data/cartdb`
+
+For a temporary in-memory database, override the service-specific URL, for example:
 
 ```bash
-docker compose up -d --build
-docker compose ps
+PRODUCT_DB_URL=jdbc:h2:mem:productdb ./mvnw -pl product-service spring-boot:run
 ```
 
-Stop the containers with:
+The H2 console is enabled for local runs at `http://localhost:<port>/h2-console`. Use JDBC URL `jdbc:h2:file:./data/<database>`, username `sa`, and an empty password.
 
-```bash
-docker compose down
-```
-
-PostgreSQL is exposed on port `5432`; pgAdmin is available at http://localhost:5050. The initialization script creates `user_db`, `product_db`, `order_db`, and `cart_db` on a new PostgreSQL volume.
-
-In pgAdmin, register a server with host `postgres`, port `5432`, username `venkata`, and password `venkata`. When connecting from Spring Boot applications running in IntelliJ, use host `localhost` as configured in each service.
+Config Server reads the checked-out `config-mgmt` files locally by default. For production configuration, run Config Server and Eureka first, then start services with `SPRING_PROFILES_ACTIVE=prod`. The production Config Server profile uses the Git repository configured by `CONFIG_GIT_URI`, `CONFIG_GIT_USERNAME`, and `CONFIG_GIT_PASSWORD`; services import it through `CONFIG_SERVER_URL` (default `http://localhost:8888`) and register with `EUREKA_DEFAULT_ZONE` (default `http://localhost:8761/eureka/`).
 
 ## Run a service standalone
 
@@ -42,7 +44,7 @@ cd user-service
 ./mvnw spring-boot:run
 ```
 
-Use the same pattern for `api-gateway`, `product-service`, `order-service`, or `cart-service`. Run each service in a separate terminal when you want the whole system running.
+Use the same pattern for `gateway`, `product-service`, `order-service`, or `cart-service`. Run each service in a separate terminal when you want the whole system running.
 
 You can also run them from the repository root through the aggregator:
 
@@ -60,4 +62,4 @@ To compile and test all modules:
 ./mvnw clean test
 ```
 
-The user service uses MongoDB, the product service uses MySQL, and the order and cart services use PostgreSQL. The services communicate locally through the REST URLs defined in their `application.properties` files.
+The user, product, order, and cart services all use H2. The services communicate locally through the REST URLs defined in their `application.properties` files. `api-gateway` is retained as the older MVC forwarding implementation; `gateway` is the Spring Cloud Gateway implementation.

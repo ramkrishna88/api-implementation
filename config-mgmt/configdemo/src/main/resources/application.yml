@@ -2,17 +2,23 @@ spring:
   application:
     name: configdemo
   profiles:
-    active:
-      - prod
+    active: ${SPRING_PROFILES_ACTIVE:prod}
 
   config:
-    import: configserver:http://localhost:8888
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+
+  output:
+    ansi:
+      enabled: ALWAYS
 
 build:
     id: ${id}
     version: ${version}
     name: ${name}
 
-
-
+logging:
+  level:
+    root: INFO
+  file:
+    name: ${CONFIGDEMO_LOG_FILE:logs/configdemo.log}
 

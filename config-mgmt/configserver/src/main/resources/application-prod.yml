@@ -1,0 +1,20 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+  cloud:
+    config:
+      server:
+        git:
+          uri: ${CONFIG_GIT_URI:https://github.com/ramkrishna88/api-implementation.git}
+          search-paths: ${CONFIG_GIT_SEARCH_PATH:config-mgmt}
+          default-label: ${CONFIG_GIT_LABEL:main}
+          clone-on-start: ${CONFIG_GIT_CLONE_ON_START:false}
+          username: ${CONFIG_GIT_USERNAME:}
+          password: ${CONFIG_GIT_PASSWORD:}
+
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
+  file:
+    name: ${CONFIG_SERVER_LOG_FILE:logs/configserver.log}
